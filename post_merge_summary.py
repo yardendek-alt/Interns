@@ -49,13 +49,21 @@ def summarize_with_llm(diff_text):
         print("Error: OPENAI_API_KEY environment variable not set", file=sys.stderr)
         sys.exit(1)
     
+    # Truncate diff if it's too large to avoid excessive API costs
+    max_diff_length = 8000  # characters
+    truncated = False
+    if len(diff_text) > max_diff_length:
+        diff_text = diff_text[:max_diff_length]
+        truncated = True
+    
     try:
         client = OpenAI(api_key=api_key)
         
+        truncation_note = " (Note: diff was truncated due to size)" if truncated else ""
         prompt = f"""Analyze the following git diff and provide a summary of what changed in exactly 2 bullet points. 
 Each bullet point should be concise and describe a key change or set of related changes.
 
-Git diff:
+Git diff{truncation_note}:
 {diff_text}
 
 Provide only the 2 bullet points, nothing else. Format each bullet point starting with '- '."""
@@ -67,7 +75,7 @@ Provide only the 2 bullet points, nothing else. Format each bullet point startin
                 {"role": "user", "content": prompt}
             ],
             temperature=0.7,
-            max_tokens=200
+            max_tokens=300
         )
         
         summary = response.choices[0].message.content.strip()

@@ -14,12 +14,15 @@ def test_git_diff():
     """Test that we can get git diff output."""
     print("Testing git diff functionality...")
     try:
+        # Check if HEAD~1 exists
+        head_minus_one_exists = subprocess.run(
+            ["git", "rev-parse", "--verify", "HEAD~1"],
+            capture_output=True
+        ).returncode == 0
+        
         # Try to get a diff (will fail if ORIG_HEAD doesn't exist, which is expected)
         result = subprocess.run(
-            ["git", "diff", "HEAD~1", "HEAD"] if subprocess.run(
-                ["git", "rev-parse", "--verify", "HEAD~1"],
-                capture_output=True
-            ).returncode == 0 else ["git", "show", "HEAD"],
+            ["git", "diff", "HEAD~1", "HEAD"] if head_minus_one_exists else ["git", "show", "HEAD"],
             capture_output=True,
             text=True,
             check=True
