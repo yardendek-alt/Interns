@@ -11,8 +11,27 @@ This script:
 import os
 import subprocess
 import sys
+import ssl
+import httpx
 from datetime import datetime
 from pathlib import Path
+
+# Disable SSL verification for corporate networks with SSL inspection
+ssl_context = ssl.create_default_context()
+ssl_context.check_hostname = False
+ssl_context.verify_mode = ssl.CERT_NONE
+
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    # Load .env from the repository root
+    repo_root = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        capture_output=True, text=True, check=True
+    ).stdout.strip()
+    load_dotenv(Path(repo_root) / ".env")
+except ImportError:
+    pass  # dotenv not installed, will use system environment variables
 
 # Try to import openai, but provide helpful error if not installed
 try:
@@ -43,24 +62,17 @@ def get_git_diff():
 
 def summarize_with_llm(diff_text):
     """Send diff to LLM and get a 2-bullet-point summary."""
-    # Get API key from environment
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        print("Error: OPENAI_API_KEY environment variable not set", file=sys.stderr)
-        sys.exit(1)
+    import requests
     
-    # Truncate diff if it's too large to avoid excessive API costs
-    max_diff_length = 8000  # characters
+    # Truncate diff if it's too large
+    max_diff_length = 4000  # characters
     truncated = False
     if len(diff_text) > max_diff_length:
         diff_text = diff_text[:max_diff_length]
         truncated = True
     
-    try:
-        client = OpenAI(api_key=api_key)
-        
-        truncation_note = " (Note: diff was truncated due to size)" if truncated else ""
-        prompt = f"""Analyze the following git diff and provide a summary of what changed in exactly 2 bullet points. 
+    truncation_note = " (Note: diff was truncated due to size)" if truncated else ""
+    prompt = f"""Analyze the following git diff and provide a summary of what changed in exactly 2 bullet points. 
 Each bullet point should be concise and describe a key change or set of related changes.
 
 Git diff{truncation_note}:
@@ -68,6 +80,33 @@ Git diff{truncation_note}:
 
 Provide only the 2 bullet points, nothing else. Format each bullet point starting with '- '."""
 
+    # Try Ollama first (free, local)
+    try:
+        response = requests.post(
+            "http://localhost:11434/api/generate",
+            json={
+                "model": "llama3.2",
+                "prompt": prompt,
+                "stream": False
+            },
+            timeout=60
+        )
+        if response.status_code == 200:
+            summary = response.json().get("response", "").strip()
+            return summary
+    except Exception as e:
+        print(f"Ollama not available: {e}", file=sys.stderr)
+    
+    # Fallback to OpenAI if Ollama fails
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        print("Error: Neither Ollama nor OpenAI available", file=sys.stderr)
+        sys.exit(1)
+    
+    try:
+        http_client = httpx.Client(verify=False)
+        client = OpenAI(api_key=api_key, http_client=http_client)
+        
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
