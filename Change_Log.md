@@ -17,3 +17,8 @@
 - A new line was added to indicate that the post-merge hook is now powered by Ollama (free local AI).
 - The `post_merge_summary.py` file was updated to include explicit encoding and error handling specifications for its output.
 
+## Merge on 2025-12-29 13:48:40
+
+- The CONTRIBUTING.md file has been added and contains new guidelines for contributing to the repository, including a detailed step-by-step process for fork, branch, commit, and push changes.
+- Automatic changelog functionality has been introduced, where after a PR is merged, the Change_Log.md file will be automatically updated with a summary of the changes made.
+
