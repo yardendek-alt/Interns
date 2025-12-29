@@ -7,6 +7,7 @@ This repository includes an automated post-merge hook that generates a summary o
 ### Prerequisites
 - Python 3.7 or higher
 - OpenAI API key
+- Ollama
 
 ### Installation
 
