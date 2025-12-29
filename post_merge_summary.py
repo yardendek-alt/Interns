@@ -91,7 +91,7 @@ Provide only the 2 bullet points, nothing else. Format each bullet point startin
                 "prompt": prompt,
                 "stream": False
             },
-            timeout=60
+            timeout=120
         )
         if response.status_code == 200:
             summary = response.json().get("response", "").strip()
