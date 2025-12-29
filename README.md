@@ -1,4 +1,4 @@
-# Interns
+# Interns Project
 
 🚀 **Automated Changelog Generator**
 
