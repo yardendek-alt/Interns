@@ -1,6 +1,8 @@
 # Interns
 
-This repository includes an automated post-merge hook that generates a summary of changes using an LLM.
+🚀 **Automated Changelog Generator**
+
+This repository includes an automated post-merge hook that generates a summary of changes using an LLM (AI).
 
 ## Setup
 
