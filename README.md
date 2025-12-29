@@ -6,6 +6,8 @@ This repository includes an automated post-merge hook that generates a summary o
 
 ✨ **Features:** Auto-updates `Change_Log.md` after every merge!
 
+📝 **Version:** 2.0 - Now powered by Ollama (free local AI)!
+
 ## Setup
 
 ### Prerequisites
