@@ -78,3 +78,12 @@
 
 **Stats:** 1 file changed, 1 insertion(+), 1 deletion(-)
 
+
+## Merge on 2025-12-29 13:35:18
+
+**PR #14:** Remove testing instructions from README
+
+**Files changed:** README.md
+
+**Stats:** 1 file changed, 22 deletions(-)
+
