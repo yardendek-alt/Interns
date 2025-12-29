@@ -10,6 +10,8 @@ This repository includes an automated post-merge hook that generates a summary o
 
 🔧 **Last tested:** December 29, 2025
 
+⚙️ **CI/CD:** GitHub Actions enabled for automatic changelog updates!
+
 ## Setup
 
 ### Prerequisites
