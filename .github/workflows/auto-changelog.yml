@@ -20,6 +20,8 @@ jobs:
           fetch-depth: 0
 
       - name: Generate changelog entry
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
           # Get PR info
           PR_TITLE="${{ github.event.pull_request.title }}"
@@ -28,46 +30,33 @@ jobs:
           # Get timestamp
           TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
           
-          # Get list of changed files
-          FILES_CHANGED=$(git diff HEAD~1 --name-only | head -5)
+          # Get actual code changes (added lines, excluding +++ and ---)
+          ADDED_LINES=$(git diff HEAD~1 HEAD | grep "^+" | grep -v "^+++" | head -5 | sed 's/^+/  /')
+          REMOVED_LINES=$(git diff HEAD~1 HEAD | grep "^-" | grep -v "^---" | head -3 | sed 's/^-/  /')
           
-          # Get diff stats
-          STATS=$(git diff HEAD~1 --shortstat)
+          # Get files changed
+          FILES=$(git diff HEAD~1 --name-only | tr '\n' ', ' | sed 's/,$//')
           
-          # Create smart summary based on file changes
-          SUMMARY=""
+          # Get stats
+          STATS=$(git diff HEAD~1 --shortstat | xargs)
           
-          if echo "$FILES_CHANGED" | grep -q "README"; then
-            SUMMARY="$SUMMARY\n- Updated README documentation"
+          # Build summary
+          SUMMARY="**PR #${PR_NUMBER}:** ${PR_TITLE}\n\n"
+          SUMMARY="${SUMMARY}**Files changed:** ${FILES}\n\n"
+          
+          if [ -n "$ADDED_LINES" ]; then
+            SUMMARY="${SUMMARY}**Added:**\n\`\`\`\n${ADDED_LINES}\n\`\`\`\n\n"
           fi
           
-          if echo "$FILES_CHANGED" | grep -q ".py"; then
-            SUMMARY="$SUMMARY\n- Modified Python scripts"
-          fi
-          
-          if echo "$FILES_CHANGED" | grep -q ".yml\|.yaml"; then
-            SUMMARY="$SUMMARY\n- Updated workflow/configuration files"
-          fi
-          
-          if echo "$FILES_CHANGED" | grep -q ".md"; then
-            SUMMARY="$SUMMARY\n- Updated markdown documentation"
-          fi
-          
-          # If no specific match, use generic
-          if [ -z "$SUMMARY" ]; then
-            SUMMARY="- $PR_TITLE"
-          fi
-          
-          # Add stats
-          SUMMARY="$SUMMARY\n- Changes: $STATS"
+          SUMMARY="${SUMMARY}**Stats:** ${STATS}"
           
           # Create entry
-          ENTRY="## Merge on ${TIMESTAMP}\n\n**PR #${PR_NUMBER}:** ${PR_TITLE}\n${SUMMARY}\n"
+          ENTRY="## Merge on ${TIMESTAMP}\n\n${SUMMARY}\n"
           
           # Append to Change_Log.md
           echo -e "\n${ENTRY}" >> Change_Log.md
           
-          echo "Changelog updated!"
+          echo "Changelog updated with actual code changes!"
 
       - name: Commit and push changes
         run: |
