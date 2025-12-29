@@ -10,12 +10,17 @@ This repository includes an automated post-merge hook that generates a summary o
 
 ### Installation
 
-1. Install required Python packages:
+1. Run the setup script to install the git hook:
+```bash
+./setup_hook.sh
+```
+
+2. Install required Python packages:
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Set up your OpenAI API key:
+3. Set up your OpenAI API key:
 ```bash
 # Copy the example env file
 cp .env.example .env
@@ -25,7 +30,7 @@ cp .env.example .env
 export OPENAI_API_KEY="your_api_key_here"
 ```
 
-3. The git hook is already set up in `.git/hooks/post-merge` and will run automatically after each merge.
+The git hook will now run automatically after each merge.
 
 ## How It Works
 
