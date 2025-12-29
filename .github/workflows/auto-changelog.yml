@@ -1,0 +1,57 @@
+name: Auto Update Changelog
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  update-changelog:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests
+
+      - name: Generate changelog entry
+        run: |
+          # Get PR title and description
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+          
+          # Get current timestamp
+          TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+          
+          # Get the diff summary (files changed)
+          DIFF_SUMMARY=$(git diff HEAD~1 --stat | tail -1)
+          
+          # Create changelog entry
+          ENTRY="## Merge on ${TIMESTAMP}\n\n- **PR #${PR_NUMBER}**: ${PR_TITLE}\n- Author: @${PR_AUTHOR}\n- Changes: ${DIFF_SUMMARY}\n"
+          
+          # Append to Change_Log.md
+          echo -e "\n${ENTRY}" >> Change_Log.md
+          
+          echo "Changelog updated with PR #${PR_NUMBER}"
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add Change_Log.md
+          git diff --staged --quiet || git commit -m "Auto-update changelog for PR #${{ github.event.pull_request.number }}"
+          git push
+
