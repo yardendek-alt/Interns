@@ -5,7 +5,7 @@ Post-merge script that generates a summary of changes using an LLM.
 This script:
 1. Gets the git diff between ORIG_HEAD and HEAD
 2. Sends the diff to an LLM API for summarization
-3. Appends the summary with timestamp to project_evolution.md
+3. Appends the summary with timestamp to Change_Log.md
 """
 
 import os
@@ -86,7 +86,7 @@ Provide only the 2 bullet points, nothing else. Format each bullet point startin
 
 
 def append_to_evolution_file(summary):
-    """Append the summary with timestamp to project_evolution.md."""
+    """Append the summary with timestamp to Change_Log.md."""
     repo_root = subprocess.run(
         ["git", "rev-parse", "--show-toplevel"],
         capture_output=True,
@@ -94,7 +94,7 @@ def append_to_evolution_file(summary):
         check=True
     ).stdout.strip()
     
-    evolution_file = Path(repo_root) / "project_evolution.md"
+    evolution_file = Path(repo_root) / "Change_Log.md"
     
     # Get current timestamp
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

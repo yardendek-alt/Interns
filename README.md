@@ -52,7 +52,7 @@ After each successful git merge, the post-merge hook will:
 1. Get the git diff between ORIG_HEAD and HEAD
 2. Send the diff to an LLM (GPT-3.5-turbo) for summarization
 3. Generate a 2-bullet-point summary of the changes
-4. Append the summary with a timestamp to `project_evolution.md`
+4. Append the summary with a timestamp to `Change_Log.md`
 
 ## Manual Testing
 
