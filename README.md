@@ -32,6 +32,20 @@ export OPENAI_API_KEY="your_api_key_here"
 
 The git hook will now run automatically after each merge.
 
+## Testing
+
+You can verify the installation is correct by running the test script:
+
+```bash
+python3 test_post_merge.py
+```
+
+This will test that:
+- The Python script has valid syntax
+- Git operations work correctly
+- File operations work correctly
+- The post-merge hook is installed and executable
+
 ## How It Works
 
 After each successful git merge, the post-merge hook will:
