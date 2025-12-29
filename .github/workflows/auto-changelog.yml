@@ -17,7 +17,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -25,29 +25,64 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: |
-          pip install requests
+        run: pip install groq
 
-      - name: Generate changelog entry
+      - name: Generate AI changelog entry
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: |
-          # Get PR title and description
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          PR_NUMBER="${{ github.event.pull_request.number }}"
-          PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+          python << 'EOF'
+          import os
+          import subprocess
+          from datetime import datetime
           
-          # Get current timestamp
-          TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+          # Get git diff
+          diff = subprocess.run(
+              ["git", "diff", "HEAD~1", "HEAD"],
+              capture_output=True, text=True
+          ).stdout[:4000]  # Limit size
           
-          # Get the diff summary (files changed)
-          DIFF_SUMMARY=$(git diff HEAD~1 --stat | tail -1)
+          # Get timestamp
+          timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
           
-          # Create changelog entry
-          ENTRY="## Merge on ${TIMESTAMP}\n\n- **PR #${PR_NUMBER}**: ${PR_TITLE}\n- Author: @${PR_AUTHOR}\n- Changes: ${DIFF_SUMMARY}\n"
+          # Check if GROQ_API_KEY exists
+          api_key = os.getenv("GROQ_API_KEY")
           
-          # Append to Change_Log.md
-          echo -e "\n${ENTRY}" >> Change_Log.md
+          if api_key and diff.strip():
+              try:
+                  from groq import Groq
+                  client = Groq(api_key=api_key)
+                  
+                  response = client.chat.completions.create(
+                      model="llama-3.1-8b-instant",
+                      messages=[{
+                          "role": "user",
+                          "content": f"""Analyze this git diff and provide a summary in exactly 2 bullet points.
+          Each bullet point should describe a key change. Format: start each with '- '
           
-          echo "Changelog updated with PR #${PR_NUMBER}"
+          Git diff:
+          {diff}
+          
+          Provide only the 2 bullet points, nothing else."""
+                      }],
+                      max_tokens=200
+                  )
+                  summary = response.choices[0].message.content.strip()
+              except Exception as e:
+                  print(f"AI error: {e}")
+                  summary = "- Changes merged from pull request\n- See commit history for details"
+          else:
+              summary = "- Changes merged from pull request\n- See commit history for details"
+          
+          # Create entry
+          entry = f"\n## Merge on {timestamp}\n\n{summary}\n"
+          
+          # Append to changelog
+          with open("Change_Log.md", "a") as f:
+              f.write(entry)
+          
+          print(f"Added changelog entry:\n{entry}")
+          EOF
 
       - name: Commit and push changes
         run: |
@@ -56,4 +91,3 @@ jobs:
           git add Change_Log.md
           git diff --staged --quiet || git commit -m "Auto-update changelog for PR #${{ github.event.pull_request.number }}"
           git push
-
