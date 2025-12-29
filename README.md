@@ -8,6 +8,8 @@ This repository includes an automated post-merge hook that generates a summary o
 
 📝 **Version:** 2.0 - Now powered by Ollama (free local AI)!
 
+🔧 **Last tested:** December 29, 2025
+
 ## Setup
 
 ### Prerequisites
