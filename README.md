@@ -4,6 +4,8 @@
 
 This repository includes an automated post-merge hook that generates a summary of changes using an LLM (AI).
 
+✨ **Features:** Auto-updates `Change_Log.md` after every merge!
+
 ## Setup
 
 ### Prerequisites
