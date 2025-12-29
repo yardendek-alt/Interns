@@ -4,7 +4,7 @@
 
 This repository includes an automated post-merge hook that generates a summary of changes using an LLM (AI).
 
-✨ **Features:** Auto-updates `Change_Log.md` after every merge!
+✨ **Features:** Auto-updates `Change_Log.md` after every merge and summerize the changes!
 
 📝 **Version:** 2.0 - Now powered by Ollama (free local AI)!
 
