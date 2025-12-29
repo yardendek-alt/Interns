@@ -1,1 +1,50 @@
 # Interns
+
+This repository includes an automated post-merge hook that generates a summary of changes using an LLM.
+
+## Setup
+
+### Prerequisites
+- Python 3.7 or higher
+- OpenAI API key
+
+### Installation
+
+1. Install required Python packages:
+```bash
+pip install -r requirements.txt
+```
+
+2. Set up your OpenAI API key:
+```bash
+# Copy the example env file
+cp .env.example .env
+
+# Edit .env and add your OpenAI API key
+# Or export it in your shell:
+export OPENAI_API_KEY="your_api_key_here"
+```
+
+3. The git hook is already set up in `.git/hooks/post-merge` and will run automatically after each merge.
+
+## How It Works
+
+After each successful git merge, the post-merge hook will:
+1. Get the git diff between ORIG_HEAD and HEAD
+2. Send the diff to an LLM (GPT-3.5-turbo) for summarization
+3. Generate a 2-bullet-point summary of the changes
+4. Append the summary with a timestamp to `project_evolution.md`
+
+## Manual Testing
+
+You can manually test the script without performing a merge:
+
+```bash
+# Ensure OPENAI_API_KEY is set
+export OPENAI_API_KEY="your_api_key_here"
+
+# Run the script directly
+python3 post_merge_summary.py
+```
+
+Note: The script requires ORIG_HEAD to exist, which is typically created during a merge operation.
