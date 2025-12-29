@@ -1,5 +1,7 @@
 ## Unreleased
 
+[Docs]: Merged feature branch and updated documentation.
+
 [Feature]: Added post-merge summarization script that automatically generates AI-powered summaries after git merges using OpenAI GPT-3.5-turbo.
 
 [Feature]: Added setup automation script (`setup_hook.sh`) for one-command installation of the git post-merge hook.
