@@ -84,7 +84,7 @@ jobs:
           else:
               summary = f"- PR #{pr_number}: {pr_title}\n- Merged successfully"
           
-          entry = f"\n## 🕐 Merge on {timestamp}\n\n**PR #{pr_number}:** {pr_title}\n\n{summary}\n"
+          entry = f"\n## Merge on {timestamp}\n\n**PR #{pr_number}:** {pr_title}\n\n{summary}\n"
           
           with open("Change_Log.md", "a") as f:
               f.write(entry)
