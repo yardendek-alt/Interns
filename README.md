@@ -12,7 +12,7 @@ This repository includes an automated post-merge hook that generates a summary o
 
 ⚙️ **CI/CD:** GitHub Actions enabled for automatic changelog updates!
 
-✅ **Status:** Production ready with detailed changelogs!
+✅ **Status:** Production ready with AI-powered changelogs on GitHub!
 
 ## Setup
 
