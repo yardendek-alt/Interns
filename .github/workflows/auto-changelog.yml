@@ -19,44 +19,74 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Generate changelog entry
-        env:
-          PR_BODY: ${{ github.event.pull_request.body }}
+      - name: Install Ollama
         run: |
-          # Get PR info
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          PR_NUMBER="${{ github.event.pull_request.number }}"
+          curl -fsSL https://ollama.com/install.sh | sh
           
-          # Get timestamp
-          TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+      - name: Start Ollama and pull model
+        run: |
+          ollama serve &
+          sleep 5
+          ollama pull llama3.2
           
-          # Get actual code changes (added lines, excluding +++ and ---)
-          ADDED_LINES=$(git diff HEAD~1 HEAD | grep "^+" | grep -v "^+++" | head -5 | sed 's/^+/  /')
-          REMOVED_LINES=$(git diff HEAD~1 HEAD | grep "^-" | grep -v "^---" | head -3 | sed 's/^-/  /')
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: pip install requests
+
+      - name: Generate AI changelog entry
+        run: |
+          python << 'EOF'
+          import requests
+          import subprocess
+          from datetime import datetime
           
-          # Get files changed
-          FILES=$(git diff HEAD~1 --name-only | tr '\n' ', ' | sed 's/,$//')
+          # Get git diff
+          diff = subprocess.run(
+              ["git", "diff", "HEAD~1", "HEAD"],
+              capture_output=True, text=True
+          ).stdout[:4000]
           
-          # Get stats
-          STATS=$(git diff HEAD~1 --shortstat | xargs)
+          pr_title = "${{ github.event.pull_request.title }}"
+          pr_number = "${{ github.event.pull_request.number }}"
           
-          # Build summary
-          SUMMARY="**PR #${PR_NUMBER}:** ${PR_TITLE}\n\n"
-          SUMMARY="${SUMMARY}**Files changed:** ${FILES}\n\n"
+          timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
           
-          if [ -n "$ADDED_LINES" ]; then
-            SUMMARY="${SUMMARY}**Added:**\n\`\`\`\n${ADDED_LINES}\n\`\`\`\n\n"
-          fi
+          if diff.strip():
+              prompt = f"""Analyze this git diff and provide a summary in exactly 2 bullet points.
+          Each bullet point should describe a key change. Format: start each with '- '
           
-          SUMMARY="${SUMMARY}**Stats:** ${STATS}"
+          Git diff:
+          {diff}
           
-          # Create entry
-          ENTRY="## Merge on ${TIMESTAMP}\n\n${SUMMARY}\n"
+          Provide only the 2 bullet points, nothing else."""
+              
+              try:
+                  response = requests.post(
+                      "http://localhost:11434/api/generate",
+                      json={"model": "llama3.2", "prompt": prompt, "stream": False},
+                      timeout=120
+                  )
+                  if response.status_code == 200:
+                      summary = response.json().get("response", "").strip()
+                  else:
+                      summary = f"- PR #{pr_number}: {pr_title}\n- Merged successfully"
+              except Exception as e:
+                  print(f"Ollama error: {e}")
+                  summary = f"- PR #{pr_number}: {pr_title}\n- Merged successfully"
+          else:
+              summary = f"- PR #{pr_number}: {pr_title}\n- Merged successfully"
           
-          # Append to Change_Log.md
-          echo -e "\n${ENTRY}" >> Change_Log.md
+          entry = f"\n## Merge on {timestamp}\n\n**PR #{pr_number}:** {pr_title}\n\n{summary}\n"
           
-          echo "Changelog updated with actual code changes!"
+          with open("Change_Log.md", "a") as f:
+              f.write(entry)
+          
+          print(f"Changelog updated:\n{entry}")
+          EOF
 
       - name: Commit and push changes
         run: |
