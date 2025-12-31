@@ -38,11 +38,15 @@ jobs:
         run: pip install requests
 
       - name: Generate AI changelog entry
+        env:
+          TZ: Asia/Jerusalem
         run: |
           python << 'EOF'
           import requests
           import subprocess
           from datetime import datetime
+          import os
+          os.environ['TZ'] = 'Asia/Jerusalem'
           
           # Get git diff
           diff = subprocess.run(
