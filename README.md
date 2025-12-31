@@ -14,6 +14,8 @@ This repository includes an automated post-merge hook that generates a summary o
 
 ✅ **Status:** Production ready with AI-powered changelogs on GitHub!
 
+🕐 **time:** Israel clock
+
 ## Setup
 
 ### Prerequisites
